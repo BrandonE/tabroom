@@ -25,7 +25,11 @@ router.get(
 		models.Tournament.findAll().then(
 			function (tournament) {
 				res.status(200);
-				res.json(tournament);
+				res.json(
+					{
+						'tournaments': tournament
+					}
+				);
 			}
 		);
 	}
