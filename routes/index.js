@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-var http = require('http');
+var https = require('https');
 var parseXml = require('libxmljs').parseXml;
 
 /* GET home page. */
@@ -11,12 +11,12 @@ router.get('/', function(req, res) {
 module.exports = router;
 
 function get_xml(url, res, callback) {
-	http.get(
+	https.get(
 		url,
-		function (http_res) {
+		function (https_res) {
 			var chunks = [];
 
-			http_res
+			https_res
 			.on(
 				'data',
 				function (chunk) {
@@ -33,6 +33,7 @@ function get_xml(url, res, callback) {
 						callback(xmlDoc);
 					}
 					catch (err) {
+						res.status(500);
 						res.json('XML Parsing Error: ' + err.message);
 					}
 				}
@@ -42,7 +43,16 @@ function get_xml(url, res, callback) {
 	.on(
 		'error',
 		function (err) {
-			res.json('HTTP Error: ' + err.message);
+			res.status(500);
+			res.json('HTTPS Error: ' + err.message);
+		}
+	);
+}
+
+function set_headers(res) {
+	res.set(
+		{
+			'Accept': 'application/vnd.tabroom+json; version=2'
 		}
 	);
 }
@@ -51,7 +61,7 @@ router.get(
 	'/tournaments',
 	function (req, res, next) {
 		get_xml(
-			'http://www.tabroom.com/api/current_tournaments.mhtml',
+			'https://www.tabroom.com/api/current_tournaments.mhtml',
 			res,
 			function (xmlDoc) {
 				var tournaments = [];
@@ -64,12 +74,14 @@ router.get(
 						{
 							id: tourn.get('ID').text(),
 							name: tourn.get('TOURNNAME').text(),
-							start: tourn.get('STARTDATE').text(),
-							end: tourn.get('ENDDATE').text(),
+							start_date: tourn.get('STARTDATE').text(),
+							end_date: tourn.get('ENDDATE').text(),
+							download_site: tourn.get('DOWNLOADSITE').text(),
 						}
 					);
 				}
 
+				res.status(200);
 				res.json(tournaments);
 			}
 		);
