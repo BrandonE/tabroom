@@ -14,7 +14,6 @@ module.exports = function(sequelize, DataTypes) {
 			reg_end: DataTypes.DATE,
 			timestamp: {
 				type: DataTypes.DATE,
-				defaultValue: 'CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP',
 				allowNull: false
 			},
 			hidden: DataTypes.BOOLEAN,
