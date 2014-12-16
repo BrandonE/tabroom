@@ -9,6 +9,7 @@ var sequelize = new Sequelize(
 	process.env.TABROOM_USER,
 	process.env.TABROOM_PASS,
 	{
+		host: process.env.TABROOM_HOST,
 		define: {
 			engine: 'MYISAM'
 		}
