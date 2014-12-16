@@ -34,7 +34,16 @@ function get_xml(url, res, callback) {
 					}
 					catch (err) {
 						res.status(500);
-						res.json('XML Parsing Error: ' + err.message);
+						res.json(
+							{
+								'errors': {
+									'status': '500',
+									'title': 'XML Parsing Error',
+									'detail': err.message
+								}
+							}
+						);
+						return;
 					}
 				}
 			);
@@ -44,7 +53,16 @@ function get_xml(url, res, callback) {
 		'error',
 		function (err) {
 			res.status(500);
-			res.json('HTTPS Error: ' + err.message);
+			res.json(
+				{
+					'errors': {
+						'status': '500',
+						'title': 'HTTPS Error',
+						'detail': err.message
+					}
+				}
+			);
+			return;
 		}
 	);
 }
@@ -52,6 +70,7 @@ function get_xml(url, res, callback) {
 function set_headers(res) {
 	res.set(
 		{
+			'Content-Type': 'application/vnd.tabroom+json; version=2',
 			'Accept': 'application/vnd.tabroom+json; version=2'
 		}
 	);
@@ -61,7 +80,7 @@ router.get(
 	'/tournaments',
 	function (req, res, next) {
 		get_xml(
-			'https://www.tabroom.com/api/current_tournaments.mhtml',
+			'https://www.tabroom.com/api/current_tournaments.mhtml?timestring=2014-02-14T12%3A00%3A00',
 			res,
 			function (xmlDoc) {
 				var tournaments = [];
@@ -82,7 +101,11 @@ router.get(
 				}
 
 				res.status(200);
-				res.json(tournaments);
+				res.json(
+					{
+						'tournaments': tournaments
+					}
+				);
 			}
 		);
 	}
