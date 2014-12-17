@@ -3,11 +3,6 @@ var express = require('express');
 var router = express.Router();
 var base_path = 'https://tabroom-node.herokuapp.com/';
 
-/* GET home page. */
-router.get('/', function(req, res) {
-  res.render('index', { title: 'Express' });
-});
-
 module.exports = router;
 
 function get_attributes(model, attributes_string) {
@@ -90,7 +85,7 @@ function set_headers(res) {
 }
 
 router.param(
-	'tournament',
+	'tournaments',
 	function (req, res, next, ids) {
 		var ids = ids.split(',');
 
@@ -124,6 +119,13 @@ router.param(
 );
 
 router.get(
+	'/',
+	function (req, res) {
+		res.render('index');
+	}
+);
+
+router.get(
 	'/tournaments',
 	function (req, res, next) {
 		set_headers(res);
@@ -151,7 +153,7 @@ router.get(
 );
 
 router.get(
-	'/tournaments/:tournament',
+	'/tournaments/:tournaments',
 	function (req, res, next) {
 		set_headers(res);
 
