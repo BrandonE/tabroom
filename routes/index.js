@@ -89,6 +89,30 @@ function set_headers(res) {
 	);
 }
 
+router.param(
+	'tournament',
+	function (req, res, next, ids) {
+		var ids = ids.split(',');
+
+		if (ids.length == 1) {
+			models.Tournament.find(ids[0]).then(
+				function (tournament) {
+					req.tournaments = tournament;
+					return next();
+				}
+			);
+		}
+		else {
+			models.Tournament.findAll({ where: { id: ids }}).then(
+				function (tournaments) {
+					req.tournaments = tournaments;
+					return next();
+				}
+			);
+		}
+	}
+);
+
 router.get(
 	'/tournaments',
 	function (req, res, next) {
@@ -113,5 +137,37 @@ router.get(
 				);
 			}
 		);
+	}
+);
+
+router.get(
+	'/tournaments/:tournament',
+	function (req, res, next) {
+		set_headers(res);
+
+		if (req.tournaments !== null) {
+			res.status(200);
+			res.json(
+				{
+					links: {
+						posts: base_path + 'tournaments/{tournaments.id}'
+					},
+					tournaments: req.tournaments
+				}
+			);
+		}
+		else {
+			res.status(404);
+			res.json(
+				{
+					errors: {
+						status: '404',
+						code: 'not_found',
+						title: 'Not Found',
+						detail: 'The requested URL was not found on this server.'
+					}
+				}
+			);
+		}
 	}
 );
