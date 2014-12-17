@@ -34,6 +34,19 @@ function get_attributes(model, attributes_string) {
 	return attributes;
 }
 
+function get_filters(model, query) {
+	// Specify what fields to filter on using the values provided in the query.
+	var filters = {};
+
+	for (var attribute in query) {
+		if (attribute in model.tableAttributes) {
+			filters[attribute] = query[attribute];
+		}
+	}
+
+	return filters;
+}
+
 function get_order(model, order_string) {
 	// Specify how to sort items of this model using this string.
 	var order = [];
@@ -84,6 +97,7 @@ router.get(
 		models.Tournament.findAll(
 			{
 				attributes: get_attributes(models.Tournament, req.query.fields),
+				where: get_filters(models.Tournament, req.query),
 				order: get_order(models.Tournament, req.query.sort)
 			}
 		).then(
