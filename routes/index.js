@@ -10,7 +10,32 @@ router.get('/', function(req, res) {
 
 module.exports = router;
 
+function get_attributes(model, attributes_string) {
+	// Specify what fields to get from items of this model using this string.
+	var attributes = [];
+	var attributes_parts;
+
+	if (typeof attributes_string === 'string') {
+		attributes_parts = attributes_string.split(',');
+
+		for (var i in attributes_parts) {
+			var attribute = attributes_parts[i];
+
+			if (attribute in model.tableAttributes) {
+				attributes.push(attribute);
+			}
+		}
+	}
+
+	if (attributes.length == 0) {
+		return null;
+	}
+
+	return attributes;
+}
+
 function get_order(model, order_string) {
+	// Specify how to sort items of this model using this string.
 	var order = [];
 	var order_parts;
 
@@ -58,6 +83,7 @@ router.get(
 
 		models.Tournament.findAll(
 			{
+				attributes: get_attributes(models.Tournament, req.query.fields),
 				order: get_order(models.Tournament, req.query.sort)
 			}
 		).then(
