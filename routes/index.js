@@ -95,7 +95,12 @@ router.param(
 		var ids = ids.split(',');
 
 		if (ids.length == 1) {
-			models.Tournament.find(ids[0]).then(
+			models.Tournament.find(
+				{
+					attributes: get_attributes(models.Tournament, req.query.fields),
+					where: { id: ids[0] }
+				}
+			).then(
 				function (tournament) {
 					req.tournaments = tournament;
 					return next();
@@ -103,7 +108,12 @@ router.param(
 			);
 		}
 		else {
-			models.Tournament.findAll({ where: { id: ids }}).then(
+			models.Tournament.findAll(
+				{
+					attributes: get_attributes(models.Tournament, req.query.fields),
+					where: { id: ids }
+				}
+			).then(
 				function (tournaments) {
 					req.tournaments = tournaments;
 					return next();
