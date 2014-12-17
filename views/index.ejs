@@ -8,12 +8,13 @@
 	<meta name="author" content="">
     <title>Tabroom</title>
 	<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
-    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.min.js"></script>
+	<link href="/stylesheets/style.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.min.js"></script>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-router/0.2.10/angular-ui-router.js"></script>
     <script src="javascripts/angularApp.js"></script>
 </head>
 <body ng-app="tabroom" ng-controller="MainCtrl">
-	<div class="row">
+	<div class="row" id="content">
 		<div class="col-md-6 col-md-offset-3">
 			<ui-view></ui-view>
 		</div>
