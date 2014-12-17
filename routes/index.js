@@ -10,6 +10,38 @@ router.get('/', function(req, res) {
 
 module.exports = router;
 
+function get_order(model, order_string) {
+	var order = [];
+	var order_parts;
+
+	if (typeof order_string === 'string') {
+		order_parts = order_string.split(',');
+
+		for (var i in order_parts) {
+			var order_part = order_parts[i];
+			var attribute;
+			var direction = 'ASC';
+
+			if (order_part.length == 0) {
+				continue;
+			}
+			else if (order_part.charAt(0) == '-') {
+				attribute = order_part.substring(1);
+				direction = 'DESC';
+			}
+			else {
+				attribute = order_part;
+			}
+
+			if (attribute in model.tableAttributes) {
+				order.push([attribute, direction]);
+			}
+		}
+	}
+
+	return order;
+}
+
 function set_headers(res) {
 	res.set(
 		{
@@ -24,15 +56,19 @@ router.get(
 	function (req, res, next) {
 		set_headers(res);
 
-		models.Tournament.findAll().then(
+		models.Tournament.findAll(
+			{
+				order: get_order(models.Tournament, req.query.sort)
+			}
+		).then(
 			function (tournaments) {
 				res.status(200);
 				res.json(
 					{
-						'links': {
-							'posts': base_path + 'tournaments/{tournaments.id}'
+						links: {
+							posts: base_path + 'tournaments/{tournaments.id}'
 						},
-						'tournaments': tournaments
+						tournaments: tournaments
 					}
 				);
 			}
