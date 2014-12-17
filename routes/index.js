@@ -1,6 +1,7 @@
 var models  = require('../models');
 var express = require('express');
 var router = express.Router();
+var base_path = 'https://tabroom-node.herokuapp.com/';
 
 /* GET home page. */
 router.get('/', function(req, res) {
@@ -22,12 +23,16 @@ router.get(
 	'/tournaments',
 	function (req, res, next) {
 		set_headers(res);
+
 		models.Tournament.findAll().then(
-			function (tournament) {
+			function (tournaments) {
 				res.status(200);
 				res.json(
 					{
-						'tournaments': tournament
+						'links': {
+							'posts': base_path + 'tournaments/{tournaments.id}'
+						},
+						'tournaments': tournaments
 					}
 				);
 			}
