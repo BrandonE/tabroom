@@ -97,6 +97,10 @@ router.param(
 				}
 			).then(
 				function (tournament) {
+					if (tournament !== null) {
+						tournament.dataValues.id = tournament.dataValues.id.toString();
+					}
+
 					req.tournaments = tournament;
 					return next();
 				}
@@ -110,6 +114,10 @@ router.param(
 				}
 			).then(
 				function (tournaments) {
+					for (i in tournaments) {
+						tournaments[i].dataValues.id = tournaments[i].dataValues.id.toString();
+					}
+
 					req.tournaments = tournaments;
 					return next();
 				}
@@ -138,6 +146,10 @@ router.get(
 			}
 		).then(
 			function (tournaments) {
+				for (i in tournaments) {
+					tournaments[i].dataValues.id = tournaments[i].dataValues.id.toString();
+				}
+
 				res.status(200);
 				res.json(
 					{
