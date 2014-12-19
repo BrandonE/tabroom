@@ -1,6 +1,8 @@
 var models  = require('../models');
 var express = require('express');
+var JaySchema = require('jayschema');
 var router = express.Router();
+var validate = false;
 var base_path = 'https://tabroom-node.herokuapp.com/';
 
 module.exports = router;
@@ -75,6 +77,78 @@ function get_order(model, order_string) {
 	return order;
 }
 
+function process_data(items) {
+	var processed = [];
+
+	for (i in items) {
+		var item = items[i].dataValues;
+		item.id = item.id.toString();
+		processed.push(item);
+	}
+
+	return processed;
+}
+
+function schema_validate(instance) {
+	if (!validate) {
+		return;
+	}
+
+	var js = new JaySchema();
+	var schema = {
+		"id": "http://jsonapi.org/schema#", 
+		"$schema": "http://json-schema.org/draft-04/schema#", 
+		"title": "JSON API Schema", 
+		"description": "This is a schema for responses in the JSON API format. For more, see http://jsonapi.org", 
+		"type": "object", 
+		"resources": {
+			"type": "array", 
+			"items": {
+				"type": "object", 
+				"properties": {
+					"id": {
+						"type": [
+							"string"
+						]
+					}, 
+					"href": {
+						"type": "string"
+					}, 
+					"links": {
+						"type": "object"
+					}
+				}, 
+				"required": [
+					"id"
+				]
+			}
+		}, 
+		"patternProperties": {
+			"^(?!href$)(?!links$)(?!id$)(?!meta)(?!linked)": {
+				"$ref": "#/resources"
+			}
+		}, 
+		"properties": {
+			"meta": {
+				"type": "object"
+			}, 
+			"links": {
+				"type": "object"
+			}, 
+			"linked": {
+				"type": "object", 
+				"patternProperties": {
+					".*": {
+						"$ref": "#/resources"
+					}
+				}
+			}
+		}
+	};
+
+	console.log(js.validate(instance, schema));
+}
+
 function set_headers(res) {
 	res.set(
 		{
@@ -89,40 +163,17 @@ router.param(
 	function (req, res, next, ids) {
 		var ids = ids.split(',');
 
-		if (ids.length == 1) {
-			models.Tournament.find(
-				{
-					attributes: get_attributes(models.Tournament, req.query.fields),
-					where: { id: ids[0] }
-				}
-			).then(
-				function (tournament) {
-					if (tournament !== null) {
-						tournament.dataValues.id = tournament.dataValues.id.toString();
-					}
-
-					req.tournaments = tournament;
-					return next();
-				}
-			);
-		}
-		else {
-			models.Tournament.findAll(
-				{
-					attributes: get_attributes(models.Tournament, req.query.fields),
-					where: { id: ids }
-				}
-			).then(
-				function (tournaments) {
-					for (i in tournaments) {
-						tournaments[i].dataValues.id = tournaments[i].dataValues.id.toString();
-					}
-
-					req.tournaments = tournaments;
-					return next();
-				}
-			);
-		}
+		models.Tournament.findAll(
+			{
+				attributes: get_attributes(models.Tournament, req.query.fields),
+				where: { id: ids }
+			}
+		).then(
+			function (tournaments) {
+				req.tournaments = process_data(tournaments);
+				return next();
+			}
+		);
 	}
 );
 
@@ -146,19 +197,16 @@ router.get(
 			}
 		).then(
 			function (tournaments) {
-				for (i in tournaments) {
-					tournaments[i].dataValues.id = tournaments[i].dataValues.id.toString();
-				}
+				var output = {
+					links: {
+						tournaments: base_path + 'tournaments/{tournaments.id}'
+					},
+					tournaments: process_data(tournaments)
+				};
 
 				res.status(200);
-				res.json(
-					{
-						links: {
-							posts: base_path + 'tournaments/{tournaments.id}'
-						},
-						tournaments: tournaments
-					}
-				);
+				res.json(output);
+				schema_validate(output);
 			}
 		);
 	}
@@ -167,31 +215,33 @@ router.get(
 router.get(
 	'/tournaments/:tournaments',
 	function (req, res, next) {
+		var output;
 		set_headers(res);
 
 		if (req.tournaments !== null) {
+			output = {
+				links: {
+					tournaments: base_path + 'tournaments/{tournaments.id}'
+				},
+				tournaments: req.tournaments
+			};
+
 			res.status(200);
-			res.json(
-				{
-					links: {
-						posts: base_path + 'tournaments/{tournaments.id}'
-					},
-					tournaments: req.tournaments
-				}
-			);
 		}
 		else {
-			res.status(404);
-			res.json(
-				{
-					errors: {
-						status: '404',
-						code: 'not_found',
-						title: 'Not Found',
-						detail: 'The requested URL was not found on this server.'
-					}
+			output = {
+				errors: {
+					status: '404',
+					code: 'not_found',
+					title: 'Not Found',
+					detail: 'The requested URL was not found on this server.'
 				}
-			);
+			};
+
+			res.status(404);
 		}
+
+		res.json(output);
+		schema_validate(output);
 	}
 );
