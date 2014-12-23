@@ -78,10 +78,12 @@ function get_order(model, order_string) {
 }
 
 function process_data(items) {
+	// Process Sequelize data to be JSON API compliant.
 	var processed = [];
 
 	for (i in items) {
 		var item = items[i].dataValues;
+		// IDs must be strings.
 		item.id = item.id.toString();
 		processed.push(item);
 	}
@@ -193,6 +195,48 @@ router.get(
 			{
 				attributes: get_attributes(models.Tournament, req.query.fields),
 				where: get_filters(models.Tournament, req.query),
+				order: get_order(models.Tournament, req.query.sort)
+			}
+		).then(
+			function (tournaments) {
+				var output = {
+					links: {
+						tournaments: base_path + 'tournaments/{tournaments.id}'
+					},
+					tournaments: process_data(tournaments)
+				};
+
+				res.status(200);
+				res.json(output);
+				schema_validate(output);
+			}
+		);
+	}
+);
+
+router.get(
+	'/tournaments/current',
+	function (req, res, next) {
+		var timestring = req.query.timestring;
+		set_headers(res);
+
+		// Default to the current time for the timestring.
+		if (typeof timestring !== 'string') {
+			var d = new Date();
+			var timestring = d.toISOString();
+		}
+
+		models.Tournament.findAll(
+			{
+				attributes: get_attributes(models.Tournament, req.query.fields),
+				where: {
+					start: {
+						lte: timestring
+					},
+					end: {
+						gte: timestring
+					}
+				},
 				order: get_order(models.Tournament, req.query.sort)
 			}
 		).then(
